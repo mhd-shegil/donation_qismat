@@ -12,7 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ShoppingBag, Loader2, Upload } from "lucide-react";
 import axios from "axios";
@@ -21,7 +27,10 @@ const BAG_PRICE = 199;
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
-  phone: z.string().trim().regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number"),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number"),
   userType: z.enum(["student", "other"]),
   institutionName: z.string().trim().optional(),
   municipality: z.string().trim().optional(),
@@ -55,19 +64,20 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
   const quantity = watch("quantity");
   const totalAmount = quantity ? (parseInt(quantity) * BAG_PRICE).toString() : "0";
 
-  // ✅ Handle donation via UPI
+  // 🧠 Handle UPI payment redirection
   const onSubmit = async (data: FormData) => {
     setIsProcessing(true);
 
     const total = (parseInt(data.quantity) * BAG_PRICE).toString();
     const upiLink = `upi://pay?pa=qismatfoundation@oksbi&pn=Qismat%20Foundation&am=${total}&cu=INR&tn=Donation%20for%20Bag%20Challenge`;
 
-    window.location.href = upiLink;
-
     toast({
       title: "Redirecting to UPI App",
-      description: "Complete your donation and upload the screenshot below.",
+      description: "Complete your donation in your UPI app, then upload the screenshot below.",
     });
+
+    // redirect to UPI
+    window.location.href = upiLink;
 
     setTimeout(() => {
       setIsDonationDone(true);
@@ -75,7 +85,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
     }, 4000);
   };
 
-  // ✅ Handle screenshot upload
+  // 🧩 Upload screenshot to backend
   const handleUpload = async () => {
     if (!screenshot) {
       toast({
@@ -98,24 +108,28 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
       formData.append("totalAmount", totalAmount);
       formData.append("screenshot", screenshot);
 
-      await axios.post("http://localhost:5000/api/registerDonation", formData);
-toast({
-  title: "Upload Successful",
-  description: "Thank you for supporting the Bag Challenge!",
-});
-window.location.href = "/thank-you";
+      await axios.post(
+        "https://donation-qismat.onrender.com/api/registerDonation",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
       toast({
-        title: "Success!",
-        description: "Your donation has been recorded successfully.",
+        title: "Upload Successful 🎉",
+        description: "Thank you for supporting the Bag Challenge!",
       });
+
+      // Redirect to thank-you page
+      window.location.href = "/thank-you";
+
+      // reset states
       setScreenshot(null);
       setIsDonationDone(false);
     } catch (error) {
-      console.error(error);
+      console.error("❌ Upload failed:", error);
       toast({
         title: "Upload Failed",
-        description: "There was an error uploading your screenshot.",
+        description: "There was an issue uploading your screenshot. Please try again.",
         variant: "destructive",
       });
     }
@@ -138,13 +152,17 @@ window.location.href = "/thank-you";
           <div className="space-y-2">
             <Label>Full Name</Label>
             <Input placeholder="Enter your name" {...register("name")} />
-            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label>Phone Number</Label>
             <Input placeholder="Enter 10-digit number" {...register("phone")} />
-            {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
+            {errors.phone && (
+              <p className="text-sm text-destructive">{errors.phone.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -164,9 +182,12 @@ window.location.href = "/thank-you";
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
-            {errors.userType && <p className="text-sm text-destructive">{errors.userType.message}</p>}
+            {errors.userType && (
+              <p className="text-sm text-destructive">{errors.userType.message}</p>
+            )}
           </div>
 
+          {/* Conditional fields */}
           {userType === "student" && (
             <div className="space-y-2">
               <Label>Institution Name</Label>
@@ -182,12 +203,12 @@ window.location.href = "/thank-you";
               </div>
               <div className="space-y-2">
                 <Label>Ward Name</Label>
-                <Input placeholder="Enter ward Name" {...register("wardNumber")} />
+                <Input placeholder="Enter ward name" {...register("wardNumber")} />
               </div>
             </>
           )}
 
-           {/* 🎒 Quantity */}
+          {/* Quantity */}
           <div className="space-y-2">
             <Label htmlFor="quantity">Number of Bags</Label>
             <Input
@@ -198,7 +219,9 @@ window.location.href = "/thank-you";
               placeholder="Enter number of bags"
               {...register("quantity")}
             />
-            {errors.quantity && <p className="text-sm text-destructive">{errors.quantity.message}</p>}
+            {errors.quantity && (
+              <p className="text-sm text-destructive">{errors.quantity.message}</p>
+            )}
 
             <div className="flex gap-2 mt-2">
               {["1", "2", "5", "10"].map((preset) => (
@@ -253,7 +276,7 @@ window.location.href = "/thank-you";
             )}
           </Button>
 
-          {/* Screenshot Upload Section (appears after donation) */}
+          {/* Screenshot Upload Section */}
           {isDonationDone && (
             <div className="mt-8 p-4 border rounded-lg bg-muted/30">
               <Label className="text-sm font-medium">Upload Payment Screenshot</Label>
@@ -269,7 +292,7 @@ window.location.href = "/thank-you";
                 disabled={!screenshot}
                 className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white"
               >
-                <Upload className="mr-2 h-5 w-5" /> Donate
+                <Upload className="mr-2 h-5 w-5" /> Upload Screenshot
               </Button>
             </div>
           )}
