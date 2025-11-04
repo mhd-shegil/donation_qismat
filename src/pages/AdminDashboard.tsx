@@ -25,7 +25,7 @@ const AdminDashboard = () => {
 
   const fetchRegistrations = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/registrations");
+      const res = await axios.get("https://donation-qismat.onrender.com");
       setRegistrations(res.data);
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -90,7 +90,7 @@ const handleLogout = () => {
 
   try {
     console.log("🧾 Deleting record:", id);
-    const response = await axios.delete(`http://localhost:5000/registrations/${id}`);
+    const response = await axios.delete(`https://donation-qismat.onrender.com/${id}`);
     console.log("✅ Delete response:", response.data);
     alert("Deleted successfully!");
     fetchRegistrations();

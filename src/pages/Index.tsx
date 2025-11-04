@@ -3,6 +3,8 @@ import Hero from "@/components/Hero";
 import DonationForm from "@/components/DonationForm";
 import ThankYou from "@/pages/ThankYou";
 
+const ThankYouComponent = ThankYou as any;
+
 const Index = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [donorData, setDonorData] = useState({ name: "", quantity: "", total: "" });
@@ -22,7 +24,7 @@ const Index = () => {
       <Hero />
       <main className="container mx-auto py-12 px-4">
         {isSubmitted ? (
-          <ThankYou 
+          <ThankYouComponent 
             name={donorData.name} 
             quantity={donorData.quantity}
             total={donorData.total}
