@@ -6,6 +6,9 @@ import multer from "multer";
 import Registration from "./models/registration.js";
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+import path from "path";
+import fs from "fs"; // keep this too
+
 
 const app = express();
 app.use(cors());
