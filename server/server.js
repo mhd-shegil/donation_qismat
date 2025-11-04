@@ -15,7 +15,14 @@ app.use(bodyParser.json());
 mongoose
   .connect("mongodb+srv://shegil:Sh*9847697881@cluster0.rdefwju.mongodb.net/?appName=Cluster0")
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.error("❌ MongoDB Error:", err));
+  process.on("uncaughtException", (err) => {
+  console.error("❌ Uncaught Exception:", err);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("❌ Unhandled Rejection:", reason);
+});
+
 
 // ✅ Cloudinary Configuration
 cloudinary.config({
@@ -104,6 +111,7 @@ app.use(
 
 
 // ✅ Start Server
-const PORT = process.env.PORT || 10000; // ✅ Render gives PORT dynamically
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
 
