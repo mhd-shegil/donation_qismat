@@ -108,8 +108,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
       formData.append("totalAmount", totalAmount);
       formData.append("screenshot", screenshot);
 
-      await axios.post(
-        "https://donation-qismat.onrender.com/api/registerDonation",
+      await axios.post("https://donation-qismat-1.onrender.com/api/registerDonation",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -251,7 +250,12 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
 
           {/* QR Code */}
           <div className="text-center mt-6">
-            <img src="/src/assets/qr.jpg" alt="Scan to pay via UPI" className="mx-auto w-40" />
+           <img
+  src="/assets/qr.jpg"
+  alt="Scan to pay via UPI"
+  className="mx-auto w-40"
+/>
+
             <p className="text-xs text-muted-foreground mt-2">
               Scan the QR code to donate via any UPI app
             </p>

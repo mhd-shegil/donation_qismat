@@ -41,6 +41,12 @@ const storage = new CloudinaryStorage({
   },
 });
 const upload = multer({ storage });
+const uploadDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log("📁 Created uploads directory:", uploadDir);
+}
+app.use("/uploads", express.static(uploadDir));
 
 // ✅ Save Donation Registration (with screenshot)
 app.post("/api/registerDonation", upload.single("screenshot"), async (req, res) => {
