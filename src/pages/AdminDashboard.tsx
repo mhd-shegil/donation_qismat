@@ -22,15 +22,16 @@ const AdminDashboard = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Your Render backend API base URL
+  // ✅ Your backend URL (Render web service)
   const API_BASE = "https://donation-qismat.onrender.com";
 
+  // Fetch registrations
   const fetchRegistrations = async () => {
     try {
       const res = await axios.get(`${API_BASE}/registrations`);
       setRegistrations(res.data);
     } catch (err) {
-      console.error("❌ Error fetching data:", err);
+      console.error("❌ Error fetching registrations:", err);
     }
   };
 
@@ -38,6 +39,7 @@ const AdminDashboard = () => {
     fetchRegistrations();
   }, []);
 
+  // Filtered results
   const filtered = registrations.filter(
     (r) =>
       r.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -46,7 +48,7 @@ const AdminDashboard = () => {
       r.municipality?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // ✅ Export to Excel
+  // Export to Excel
   const exportToExcel = () => {
     if (registrations.length === 0) {
       alert("No data available to export!");
@@ -83,13 +85,13 @@ const AdminDashboard = () => {
     saveAs(blob, `Qismat_Registrations_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
-  // ✅ Logout handler
+  // Logout
   const handleLogout = () => {
     localStorage.removeItem("isAdmin");
     window.location.href = "/admin-login";
   };
 
-  // ✅ Delete handler
+  // Delete record
   const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this record?");
     if (!confirmDelete) return;
