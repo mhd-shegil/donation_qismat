@@ -69,7 +69,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
     setIsProcessing(true);
 
     const total = (parseInt(data.quantity) * BAG_PRICE).toString();
-    const upiLink = `upi://pay?pa=qismatfoundation@oksbi&pn=Qismat%20Foundation&am=${total}&cu=INR&tn=Donation%20for%20Bag%20Challenge`;
+    const upiLink = `upi://pay?pa=76143701@ubin&pn=Qismat%20Foundation&am=${total}&cu=INR&tn=Donation%20for%20Bag%20Challenge`;
 
     toast({
       title: "Redirecting to UPI App",
