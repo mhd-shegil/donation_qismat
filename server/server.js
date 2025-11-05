@@ -107,16 +107,20 @@ app.delete("/registrations/:id", async (req, res) => {
 });
 
 // ✅ CORS
+// ✅ CORS Setup (MUST be before routes)
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",                  // local dev
-      "https://donate.qismatacademy.in",        // your custom domain (future)
-      "https://donation-qismat-1.onrender.com", // your current frontend on Render
+      "http://localhost:5173",                  // Local Dev
+      "https://donate.qismatacademy.in",        // Future domain
+      "https://donation-qismat-1.onrender.com", // Render frontend
     ],
     methods: ["GET", "POST", "DELETE", "PUT"],
   })
 );
+
+app.use(bodyParser.json());
+
 
 
 // ✅ Start Server

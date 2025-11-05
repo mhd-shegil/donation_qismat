@@ -181,8 +181,7 @@ const AdminDashboard = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <img
-                        src={`${API_BASE}${r.screenshot}`}
+                      <img src={r.screenshot}
                         alt="Payment Screenshot"
                         className="w-20 h-20 object-cover rounded-lg border mx-auto"
                       />
