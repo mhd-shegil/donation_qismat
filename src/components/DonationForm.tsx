@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ShoppingBag, Loader2, Upload } from "lucide-react";
 import axios from "axios";
 
-const BAG_PRICE = 199;
+const BAG_PRICE = 1;
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
