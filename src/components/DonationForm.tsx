@@ -20,10 +20,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingBag, Loader2, Upload } from "lucide-react";
+import { ShoppingBag, Loader2, Upload, Copy } from "lucide-react";
 import axios from "axios";
 
-const BAG_PRICE = 1;
+const BAG_PRICE = 199;
+const UPI_ID = "76143701@ubin"; // ✅ Your real UPI ID
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
@@ -46,8 +47,9 @@ interface DonationFormProps {
 
 const DonationForm = ({ onSuccess }: DonationFormProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isDonationDone, setIsDonationDone] = useState(false);
+  const [isDonationStep, setIsDonationStep] = useState(false);
   const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [userType, setUserType] = useState<"student" | "other" | "">("");
   const { toast } = useToast();
 
@@ -64,28 +66,29 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
   const quantity = watch("quantity");
   const totalAmount = quantity ? (parseInt(quantity) * BAG_PRICE).toString() : "0";
 
-  // 🧠 Handle UPI payment redirection
-  const onSubmit = async (data: FormData) => {
+  // 🧠 Step 1: Proceed to Payment (no redirect)
+  const onSubmit = async () => {
     setIsProcessing(true);
-
-    const total = (parseInt(data.quantity) * BAG_PRICE).toString();
-    const upiLink = `upi://pay?pa=76143701@ubin&pn=Qismat%20Foundation&am=${total}&cu=INR&tn=Donation%20for%20Bag%20Challenge`;
-
-    toast({
-      title: "Redirecting to UPI App",
-      description: "Complete your donation in your UPI app, then upload the screenshot below.",
-    });
-
-    // redirect to UPI
-    window.location.href = upiLink;
-
     setTimeout(() => {
-      setIsDonationDone(true);
       setIsProcessing(false);
-    }, 4000);
+      setIsDonationStep(true);
+      toast({
+        title: "Proceed to Pay",
+        description: "Scan the QR or copy UPI ID below to donate.",
+      });
+    }, 1000);
   };
 
-  // 🧩 Upload screenshot to backend
+  // 📋 Copy UPI ID
+  const handleCopyUPI = async () => {
+    await navigator.clipboard.writeText(UPI_ID);
+    toast({
+      title: "UPI ID Copied!",
+      description: `${UPI_ID} copied to clipboard.`,
+    });
+  };
+
+  // 🧩 Handle screenshot upload
   const handleUpload = async () => {
     if (!screenshot) {
       toast({
@@ -97,6 +100,8 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
     }
 
     try {
+      setIsUploading(true);
+
       const formData = new FormData();
       formData.append("name", watch("name"));
       formData.append("phone", watch("phone"));
@@ -108,7 +113,8 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
       formData.append("totalAmount", totalAmount);
       formData.append("screenshot", screenshot);
 
-      await axios.post("https://donation-qismat.onrender.com/api/registerDonation",
+      await axios.post(
+        "https://donation-qismat.onrender.com/api/registerDonation",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -118,12 +124,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
         description: "Thank you for supporting the Bag Challenge!",
       });
 
-      // Redirect to thank-you page
       window.location.href = "/thank-you";
-
-      // reset states
-      setScreenshot(null);
-      setIsDonationDone(false);
     } catch (error) {
       console.error("❌ Upload failed:", error);
       toast({
@@ -131,6 +132,8 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
         description: "There was an issue uploading your screenshot. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -151,17 +154,13 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
           <div className="space-y-2">
             <Label>Full Name</Label>
             <Input placeholder="Enter your name" {...register("name")} />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
-            )}
+            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label>Phone Number</Label>
             <Input placeholder="Enter 10-digit number" {...register("phone")} />
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone.message}</p>
-            )}
+            {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -181,9 +180,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
-            {errors.userType && (
-              <p className="text-sm text-destructive">{errors.userType.message}</p>
-            )}
+            {errors.userType && <p className="text-sm text-destructive">{errors.userType.message}</p>}
           </div>
 
           {/* Conditional fields */}
@@ -218,9 +215,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
               placeholder="Enter number of bags"
               {...register("quantity")}
             />
-            {errors.quantity && (
-              <p className="text-sm text-destructive">{errors.quantity.message}</p>
-            )}
+            {errors.quantity && <p className="text-sm text-destructive">{errors.quantity.message}</p>}
 
             <div className="flex gap-2 mt-2">
               {["1", "2", "5", "10"].map((preset) => (
@@ -248,62 +243,90 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
             )}
           </div>
 
-          {/* QR Code */}
-          <div className="text-center mt-6">
-           <img
-  src="/assets/qr.jpg"
-  alt="Scan to pay via UPI"
-  className="mx-auto w-40"
-/>
+          {/* Proceed Button */}
+         {isDonationStep && (
+  <div
+    className="mt-8 p-6 rounded-xl border bg-cover bg-center relative"
+    style={{ backgroundImage: "url('/src/assets/Artboard 1.jpg')" }}
+  >
+    <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] rounded-xl"></div>
 
-            <p className="text-xs text-muted-foreground mt-2">
-              Scan the QR code to donate via any UPI app
-            </p>
-          </div>
+    <div className="relative z-10">
+      <h3 className="text-xl font-semibold text-center mb-3 text-foreground">
+        Complete Your Donation
+      </h3>
 
-          {/* Donate Button */}
+      <div className="text-center">
+        <img
+          src="/assets/qr.jpg"
+          alt="Scan to pay via UPI"
+          className="mx-auto w-40 border rounded-lg shadow-sm"
+        />
+        <p className="text-sm text-muted-foreground mt-2">
+          Scan using any UPI app
+        </p>
+
+        <div className="flex justify-center items-center gap-2 mt-3">
+          <code className="bg-white px-3 py-1 rounded text-sm border">{UPI_ID}</code>
           <Button
-            type="submit"
-            disabled={isProcessing}
-            className="w-full mt-6 h-12 text-lg font-semibold"
+            size="sm"
+            variant="outline"
+            onClick={handleCopyUPI}
+            className="flex items-center gap-1"
           >
-            {isProcessing ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Redirecting...
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="mr-2 h-5 w-5" />
-                {quantity ? `Pay ₹${totalAmount}` : "Proceed to Payment"}
-              </>
-            )}
+            <Copy size={14} /> Copy
           </Button>
+        </div>
 
-          {/* Screenshot Upload Section */}
-          {isDonationDone && (
-            <div className="mt-8 p-4 border rounded-lg bg-muted/30">
-              <Label className="text-sm font-medium">Upload Payment Screenshot</Label>
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setScreenshot(e.target.files?.[0] || null)}
-                className="mt-2"
-              />
-              <Button
-                type="button"
-                onClick={handleUpload}
-                disabled={!screenshot}
-                className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white"
-              >
-                <Upload className="mr-2 h-5 w-5" /> Upload Screenshot
-              </Button>
-            </div>
+        {/* 🧠 New Open UPI App Button */}
+        <div className="mt-4">
+          <Button
+            type="button"
+            onClick={() => {
+              const total = totalAmount;
+              const upiLink = `upi://pay?pa=${UPI_ID}&pn=Qismat%20Foundation&am=${total}&cu=INR&tn=Donation%20for%20Bag%20Challenge`;
+              window.location.href = upiLink;
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
+          >
+            💰 Open UPI App to Pay ₹{totalAmount}
+          </Button>
+          <p className="text-xs text-muted-foreground mt-2">
+            Works best on Google Pay, PhonePe, or Paytm mobile apps.
+          </p>
+        </div>
+      </div>
+
+      {/* Screenshot Upload */}
+      <div className="mt-6">
+        <Label className="text-sm font-medium">Upload Payment Screenshot</Label>
+        <Input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setScreenshot(e.target.files?.[0] || null)}
+          className="mt-2"
+        />
+        <Button
+          type="button"
+          onClick={handleUpload}
+          disabled={!screenshot || isUploading}
+          className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
+        >
+          {isUploading ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            <>
+              <Upload className="mr-2 h-5 w-5" /> Upload Screenshot
+            </>
           )}
-        </form>
-      </CardContent>
-    </Card>
-  );
-};
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+
 
 export default DonationForm;
