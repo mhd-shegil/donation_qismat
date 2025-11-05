@@ -3,7 +3,6 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-
 interface Registration {
   _id: string;
   name: string;
@@ -23,12 +22,15 @@ const AdminDashboard = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // ✅ Your Render backend API base URL
+  const API_BASE = "https://donation-qismat.onrender.com";
+
   const fetchRegistrations = async () => {
     try {
-      const res = await axios.get("https://donation-qismat.onrender.com");
+      const res = await axios.get(`${API_BASE}/registrations`);
       setRegistrations(res.data);
     } catch (err) {
-      console.error("Error fetching data:", err);
+      console.error("❌ Error fetching data:", err);
     }
   };
 
@@ -36,103 +38,103 @@ const AdminDashboard = () => {
     fetchRegistrations();
   }, []);
 
-  const filtered = registrations.filter((r) =>
-    r.name.toLowerCase().includes(search.toLowerCase()) ||
-    r.phone.includes(search) ||
-    r.institutionName?.toLowerCase().includes(search.toLowerCase()) ||
-    r.municipality?.toLowerCase().includes(search.toLowerCase())
+  const filtered = registrations.filter(
+    (r) =>
+      r.name.toLowerCase().includes(search.toLowerCase()) ||
+      r.phone.includes(search) ||
+      r.institutionName?.toLowerCase().includes(search.toLowerCase()) ||
+      r.municipality?.toLowerCase().includes(search.toLowerCase())
   );
+
+  // ✅ Export to Excel
   const exportToExcel = () => {
-  if (registrations.length === 0) {
-    alert("No data available to export!");
-    return;
-  }
+    if (registrations.length === 0) {
+      alert("No data available to export!");
+      return;
+    }
 
-  // Convert registration data to worksheet
-  const worksheet = XLSX.utils.json_to_sheet(
-    registrations.map((r, i) => ({
-      S_No: i + 1,
-      Name: r.name,
-      Phone: r.phone,
-      UserType: r.userType,
-      Institution: r.institutionName || "-",
-      Municipality: r.municipality || "-",
-      Ward: r.wardNumber || "-",
-      Quantity: r.quantity,
-      Amount: r.totalAmount,
-      Date: new Date(r.date).toLocaleString(),
-    }))
-  );
+    const worksheet = XLSX.utils.json_to_sheet(
+      registrations.map((r, i) => ({
+        S_No: i + 1,
+        Name: r.name,
+        Phone: r.phone,
+        UserType: r.userType,
+        Institution: r.institutionName || "-",
+        Municipality: r.municipality || "-",
+        Ward: r.wardNumber || "-",
+        Quantity: r.quantity,
+        Amount: r.totalAmount,
+        Date: new Date(r.date).toLocaleString(),
+      }))
+    );
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
 
-  const excelBuffer = XLSX.write(workbook, {
-    bookType: "xlsx",
-    type: "array",
-  });
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
 
-  const blob = new Blob([excelBuffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
 
-  saveAs(blob, `Qismat_Registrations_${new Date().toISOString().slice(0, 10)}.xlsx`);
-};
+    saveAs(blob, `Qismat_Registrations_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
 
-const handleLogout = () => {
-  localStorage.removeItem("isAdmin");
-  window.location.href = "/admin-login";
-};
- // 🗑️ Delete handler
- const handleDelete = async (id: string) => {
-  const confirmDelete = window.confirm("Are you sure you want to delete this record?");
-  if (!confirmDelete) return;
+  // ✅ Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("isAdmin");
+    window.location.href = "/admin-login";
+  };
 
-  try {
-    console.log("🧾 Deleting record:", id);
-    const response = await axios.delete(`https://donation-qismat.onrender.com/${id}`);
-    console.log("✅ Delete response:", response.data);
-    alert("Deleted successfully!");
-    fetchRegistrations();
-  } catch (err: any) {
-    console.error("❌ Error deleting record:", err.response?.data || err.message);
-    alert("Failed to delete. Please check console for details.");
-  }
-};
+  // ✅ Delete handler
+  const handleDelete = async (id: string) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this record?");
+    if (!confirmDelete) return;
+
+    try {
+      setLoading(true);
+      const response = await axios.delete(`${API_BASE}/registrations/${id}`);
+      console.log("✅ Deleted:", response.data);
+      alert("Deleted successfully!");
+      fetchRegistrations();
+    } catch (err: any) {
+      console.error("❌ Error deleting record:", err.response?.data || err.message);
+      alert("Failed to delete record.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center text-primary">
-        Admin Dashboard — Qismat Registrations
-      </h1>
-      <div className="flex justify-between items-center mb-4">
-  <h1 className="text-3xl font-bold text-primary">Admin Dashboard</h1>
-  <button
-    onClick={handleLogout}
-    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow"
-  >
-    Logout
-  </button>
-</div>
-
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-primary">Admin Dashboard — Qismat Registrations</h1>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow"
+        >
+          Logout
+        </button>
+      </div>
 
       <div className="flex justify-between items-center mb-4">
-  <input
-    type="text"
-    placeholder="Search by name, phone, or institution..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    className="w-2/3 border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-primary"
-  />
-
-  <button
-    onClick={exportToExcel}
-    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow"
-  >
-    📤 Export to Excel
-  </button>
-</div>
-
+        <input
+          type="text"
+          placeholder="Search by name, phone, or institution..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-2/3 border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-primary"
+        />
+        <button
+          onClick={exportToExcel}
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow"
+        >
+          📤 Export to Excel
+        </button>
+      </div>
 
       <div className="overflow-x-auto border rounded-xl shadow-md">
         <table className="min-w-full border-collapse bg-white">
@@ -147,10 +149,11 @@ const handleLogout = () => {
               <th className="p-3 border">Qty</th>
               <th className="p-3 border">Amount (₹)</th>
               <th className="p-3 border">Date</th>
-               <th className="p-3">Screenshot</th>
-               <th className="p-3">Action</th>
+              <th className="p-3 border">Screenshot</th>
+              <th className="p-3 border">Action</th>
             </tr>
           </thead>
+
           <tbody>
             {filtered.map((r, i) => (
               <tr key={r._id} className="hover:bg-gray-50 transition">
@@ -159,9 +162,7 @@ const handleLogout = () => {
                 <td className="p-3 border">{r.phone}</td>
                 <td className="p-3 border">{r.userType}</td>
                 <td className="p-3 border">
-                  {r.userType === "student"
-                    ? r.institutionName
-                    : r.municipality}
+                  {r.userType === "student" ? r.institutionName : r.municipality}
                 </td>
                 <td className="p-3 border text-center">{r.wardNumber || "-"}</td>
                 <td className="p-3 border text-center">{r.quantity}</td>
@@ -171,32 +172,32 @@ const handleLogout = () => {
                 <td className="p-3 border text-sm text-gray-500">
                   {new Date(r.date).toLocaleString()}
                 </td>
-                <td className="p-3">
-                {r.screenshot ? (
-                  <a
-                    href={`http://localhost:5000${r.screenshot}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <td className="p-3 text-center">
+                  {r.screenshot ? (
+                    <a
+                      href={`${API_BASE}${r.screenshot}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <img
+                        src={`${API_BASE}${r.screenshot}`}
+                        alt="Payment Screenshot"
+                        className="w-20 h-20 object-cover rounded-lg border mx-auto"
+                      />
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 italic">No image</span>
+                  )}
+                </td>
+                <td className="p-3 text-center">
+                  <button
+                    onClick={() => handleDelete(r._id)}
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:bg-gray-400"
+                    disabled={loading}
                   >
-                    <img
-                      src={`http://localhost:5000${r.screenshot}`}
-                      alt="Payment Screenshot"
-                      className="w-20 h-20 object-cover rounded-lg border"
-                    />
-                  </a>
-                ) : (
-                  <span className="text-gray-400 italic">No image</span>
-                )}
-              </td>
-              <td className="p-3">
-                <button
-                  onClick={() => handleDelete(r._id)}
-                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:bg-gray-400"
-                  disabled={loading}
-                >
-                  {loading ? "Deleting..." : "Delete"}
-                </button>
-              </td>
+                    {loading ? "Deleting..." : "Delete"}
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -204,9 +205,7 @@ const handleLogout = () => {
       </div>
 
       {filtered.length === 0 && (
-        <p className="text-center text-gray-500 mt-6">
-          No registrations found.
-        </p>
+        <p className="text-center text-gray-500 mt-6">No registrations found.</p>
       )}
     </div>
   );
