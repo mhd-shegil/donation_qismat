@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -24,7 +24,7 @@ import { ShoppingBag, Loader2, Upload, Copy } from "lucide-react";
 import axios from "axios";
 
 const BAG_PRICE = 199;
-const UPI_ID = "76143701@ubin"; // ✅ Your real UPI ID
+const UPI_ID = "76143701@ubin"; // ✅ Your verified UPI ID
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
@@ -50,8 +50,14 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
   const [isDonationStep, setIsDonationStep] = useState(false);
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [userType, setUserType] = useState<"student" | "other" | "">("");
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Detect mobile device for showing “Open UPI App”
+    setIsMobile(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+  }, []);
 
   const {
     register,
@@ -66,7 +72,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
   const quantity = watch("quantity");
   const totalAmount = quantity ? (parseInt(quantity) * BAG_PRICE).toString() : "0";
 
-  // 🧠 Step 1: Proceed to Payment (no redirect)
+  // Step 1: Proceed to Payment (shows QR & upload section)
   const onSubmit = async () => {
     setIsProcessing(true);
     setTimeout(() => {
@@ -79,7 +85,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
     }, 1000);
   };
 
-  // 📋 Copy UPI ID
+  // Copy UPI ID
   const handleCopyUPI = async () => {
     await navigator.clipboard.writeText(UPI_ID);
     toast({
@@ -88,7 +94,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
     });
   };
 
-  // 🧩 Handle screenshot upload
+  // Upload Screenshot
   const handleUpload = async () => {
     if (!screenshot) {
       toast({
@@ -183,7 +189,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
             {errors.userType && <p className="text-sm text-destructive">{errors.userType.message}</p>}
           </div>
 
-          {/* Conditional fields */}
+          {/* Conditional Fields */}
           {userType === "student" && (
             <div className="space-y-2">
               <Label>Institution Name</Label>
@@ -244,89 +250,113 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
           </div>
 
           {/* Proceed Button */}
-         {isDonationStep && (
-  <div
-    className="mt-8 p-6 rounded-xl border bg-cover bg-center relative"
-    style={{ backgroundImage: "url('/src/assets/Artboard 1.jpg')" }}
-  >
-    <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] rounded-xl"></div>
-
-    <div className="relative z-10">
-      <h3 className="text-xl font-semibold text-center mb-3 text-foreground">
-        Complete Your Donation
-      </h3>
-
-      <div className="text-center">
-        <img
-          src="/assets/qr.jpg"
-          alt="Scan to pay via UPI"
-          className="mx-auto w-40 border rounded-lg shadow-sm"
-        />
-        <p className="text-sm text-muted-foreground mt-2">
-          Scan using any UPI app
-        </p>
-
-        <div className="flex justify-center items-center gap-2 mt-3">
-          <code className="bg-white px-3 py-1 rounded text-sm border">{UPI_ID}</code>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleCopyUPI}
-            className="flex items-center gap-1"
-          >
-            <Copy size={14} /> Copy
-          </Button>
-        </div>
-
-        {/* 🧠 New Open UPI App Button */}
-        <div className="mt-4">
-          <Button
-            type="button"
-            onClick={() => {
-              const total = totalAmount;
-              const upiLink = `upi://pay?pa=${UPI_ID}&pn=Qismat%20Foundation&am=${total}&cu=INR&tn=Donation%20for%20Bag%20Challenge`;
-              window.location.href = upiLink;
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
-          >
-            💰 Open UPI App to Pay ₹{totalAmount}
-          </Button>
-          <p className="text-xs text-muted-foreground mt-2">
-            Works best on Google Pay, PhonePe, or Paytm mobile apps.
-          </p>
-        </div>
-      </div>
-
-      {/* Screenshot Upload */}
-      <div className="mt-6">
-        <Label className="text-sm font-medium">Upload Payment Screenshot</Label>
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setScreenshot(e.target.files?.[0] || null)}
-          className="mt-2"
-        />
-        <Button
-          type="button"
-          onClick={handleUpload}
-          disabled={!screenshot || isUploading}
-          className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
-        >
-          {isUploading ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Uploading...
-            </>
-          ) : (
-            <>
-              <Upload className="mr-2 h-5 w-5" /> Upload Screenshot
-            </>
+          {!isDonationStep && (
+            <Button
+              type="submit"
+              disabled={isProcessing}
+              className="w-full mt-6 h-12 text-lg font-semibold"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Preparing Payment...
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="mr-2 h-5 w-5" />
+                  Proceed to Pay
+                </>
+              )}
+            </Button>
           )}
-        </Button>
-      </div>
-    </div>
-  </div>
-)}
 
+          {/* Payment Section */}
+          {isDonationStep && (
+            <div
+              className="mt-8 p-6 rounded-xl border bg-cover bg-center relative"
+              style={{ backgroundImage: "url('/src/assets/Artboard 1.jpg')" }}
+            >
+              <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] rounded-xl"></div>
+
+              <div className="relative z-10">
+                <h3 className="text-xl font-semibold text-center mb-3 text-foreground">
+                  Complete Your Donation
+                </h3>
+
+                <div className="text-center">
+                  <img
+                    src="/assets/qr.jpg"
+                    alt="Scan to pay via UPI"
+                    className="mx-auto w-40 border rounded-lg shadow-sm"
+                  />
+                  <p className="text-sm text-muted-foreground mt-2">Scan using any UPI app</p>
+
+                  <div className="flex justify-center items-center gap-2 mt-3">
+                    <code className="bg-white px-3 py-1 rounded text-sm border">{UPI_ID}</code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCopyUPI}
+                      className="flex items-center gap-1"
+                    >
+                      <Copy size={14} /> Copy
+                    </Button>
+                  </div>
+
+                  {isMobile && (
+                    <div className="mt-4">
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          const total = totalAmount;
+                          const upiLink = `upi://pay?pa=${UPI_ID}&pn=Qismat%20Foundation&am=${total}&cu=INR&tn=Donation%20for%20Bag%20Challenge`;
+                          window.location.href = upiLink;
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
+                      >
+                        💰 Open UPI App to Pay ₹{totalAmount}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Works best on Google Pay, PhonePe, or Paytm mobile apps.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Screenshot Upload */}
+                <div className="mt-6">
+                  <Label className="text-sm font-medium">Upload Payment Screenshot</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setScreenshot(e.target.files?.[0] || null)}
+                    className="mt-2"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleUpload}
+                    disabled={!screenshot || isUploading}
+                    className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-5 w-5" /> Upload Screenshot
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </form>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default DonationForm;
