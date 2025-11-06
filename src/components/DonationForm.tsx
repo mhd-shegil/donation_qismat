@@ -322,16 +322,16 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
                   </div>
 
                   {isMobile && (
-                    <div className="mt-4">
-                      <Button
-                        type="button"
-                        onClick={openUPIApp}
-                        className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
-                      >
-                        <ExternalLink className="mr-2 h-4 w-4" /> Open UPI App
-                      </Button>
-                    </div>
-                  )}
+  <div className="mt-4">
+    <Button
+      type="button"
+      onClick={openUPIApp}
+      className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
+    >
+      💰 Open UPI App
+    </Button>
+  </div>
+)}
                 </div>
 
                 {/* Screenshot Upload */}
