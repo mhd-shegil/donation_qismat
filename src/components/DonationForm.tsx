@@ -20,7 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingBag, Loader2, Upload, Copy, ExternalLink } from "lucide-react";
+import { ShoppingBag, Loader2, Upload, Copy } from "lucide-react";
 import axios from "axios";
 
 const BAG_PRICE = 199;
@@ -71,7 +71,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
   const quantity = watch("quantity");
   const totalAmount = quantity ? (parseInt(quantity) * BAG_PRICE).toString() : "0";
 
-  // Step 1 — Proceed to Payment
+  // Step 1: Proceed to Payment
   const onSubmit = async () => {
     setIsProcessing(true);
     setTimeout(() => {
@@ -93,27 +93,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
     });
   };
 
-  // Just open the UPI app (no redirect link)
-  const openUPIApp = () => {
-    if (!isMobile) {
-      toast({
-        title: "Please use your phone",
-        description: "UPI apps can only be opened from mobile devices.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Opening UPI App...",
-      description: "Now paste the copied UPI ID in your payment app.",
-    });
-
-    // ⚡ Try to trigger any installed UPI app — blank intent
-    window.location.href = "upi://";
-  };
-
-  // Upload screenshot (fast redirect)
+  // Upload Screenshot (fast redirect)
   const handleUpload = async () => {
     if (!screenshot) {
       toast({
@@ -146,10 +126,9 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
 
       toast({
         title: "Upload Successful 🎉",
-        description: "Redirecting to Thank You page...",
+        description: "Thank you for supporting the Bag Challenge!",
       });
 
-      // 🚀 Redirect instantly after successful upload
       window.location.href = "/thank-you";
     } catch (error) {
       console.error("❌ Upload failed:", error);
@@ -287,7 +266,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
             </Button>
           )}
 
-          {/* Payment Section */}
+          {/* Payment & Upload Section */}
           {isDonationStep && (
             <div
               className="mt-8 p-6 rounded-xl border bg-cover bg-center relative"
@@ -306,7 +285,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
                     className="mx-auto w-40 border rounded-lg shadow-sm"
                   />
                   <p className="text-sm text-muted-foreground mt-2">
-                    Copy the UPI ID and paste it in your UPI app to donate.
+                    Copy the UPI ID and paste it in your preferred UPI app.
                   </p>
 
                   <div className="flex justify-center items-center gap-2 mt-3">
@@ -321,17 +300,64 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
                     </Button>
                   </div>
 
+                  {/* UPI App Chooser */}
                   {isMobile && (
-  <div className="mt-4">
-    <Button
-      type="button"
-      onClick={openUPIApp}
-      className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
-    >
-      💰 Open UPI App
-    </Button>
-  </div>
-)}
+                    <div className="mt-5 text-center">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Choose your preferred UPI app to open:
+                      </p>
+
+                      <div className="flex flex-wrap justify-center gap-3">
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            window.location.href =
+                              "intent://upi/pay#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end"
+                          }
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Google Pay
+                        </Button>
+
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            window.location.href =
+                              "intent://upi/pay#Intent;scheme=upi;package=com.phonepe.app;end"
+                          }
+                          className="bg-purple-600 hover:bg-purple-700 text-white"
+                        >
+                          PhonePe
+                        </Button>
+
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            window.location.href =
+                              "intent://upi/pay#Intent;scheme=upi;package=net.one97.paytm;end"
+                          }
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                          Paytm
+                        </Button>
+
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            window.location.href =
+                              "intent://upi/pay#Intent;scheme=upi;package=in.org.npci.upiapp;end"
+                          }
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          BHIM UPI
+                        </Button>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Copy the UPI ID and paste it manually after opening your app.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Screenshot Upload */}
