@@ -24,7 +24,7 @@ import { ShoppingBag, Loader2, Upload, Copy } from "lucide-react";
 import axios from "axios";
 
 const BAG_PRICE = 199;
-const UPI_ID = "76143701@ubin"; // ✅ Your verified UPI ID
+const UPI_ID = "76143701@ubin"; // ✅ Your UPI ID
 
 const formSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
@@ -51,11 +51,10 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [userType, setUserType] = useState<"student" | "other" | "">("");
   const { toast } = useToast();
+  const [userType, setUserType] = useState<"student" | "other" | "">("");
 
   useEffect(() => {
-    // Detect mobile device for showing “Open UPI App”
     setIsMobile(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
   }, []);
 
@@ -72,7 +71,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
   const quantity = watch("quantity");
   const totalAmount = quantity ? (parseInt(quantity) * BAG_PRICE).toString() : "0";
 
-  // Step 1: Proceed to Payment (shows QR & upload section)
+  // Step 1: Proceed to Payment
   const onSubmit = async () => {
     setIsProcessing(true);
     setTimeout(() => {
@@ -94,7 +93,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
     });
   };
 
-  // Upload Screenshot
+  // Upload Screenshot (with redirect after success)
   const handleUpload = async () => {
     if (!screenshot) {
       toast({
@@ -127,10 +126,13 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
 
       toast({
         title: "Upload Successful 🎉",
-        description: "Thank you for supporting the Bag Challenge!",
+        description: "Thank you for supporting the Bag Challenge! Redirecting...",
       });
 
-      window.location.href = "/thank-you";
+      // Wait 3 seconds before redirect
+      setTimeout(() => {
+        window.location.href = "/thank-you";
+      }, 3000);
     } catch (error) {
       console.error("❌ Upload failed:", error);
       toast({
@@ -270,7 +272,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
             </Button>
           )}
 
-          {/* Payment Section */}
+          {/* Payment & Upload Section */}
           {isDonationStep && (
             <div
               className="mt-8 p-6 rounded-xl border bg-cover bg-center relative"
@@ -308,8 +310,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
                       <Button
                         type="button"
                         onClick={() => {
-                          const total = totalAmount;
-                          const upiLink = `upi://pay?pa=${UPI_ID}&pn=Qismat%20Foundation&am=${total}&cu=INR&tn=Donation%20for%20Bag%20Challenge`;
+                          const upiLink = `upi://pay?pa=${UPI_ID}&pn=Qismat%20Foundation&am=${totalAmount}&cu=INR&tn=Donation%20for%20Bag%20Challenge`;
                           window.location.href = upiLink;
                         }}
                         className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
