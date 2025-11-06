@@ -51,8 +51,8 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const { toast } = useToast();
   const [userType, setUserType] = useState<"student" | "other" | "">("");
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsMobile(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
@@ -71,7 +71,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
   const quantity = watch("quantity");
   const totalAmount = quantity ? (parseInt(quantity) * BAG_PRICE).toString() : "0";
 
-  // Step 1: Proceed to Payment
+  // Step 1 — proceed to payment
   const onSubmit = async () => {
     setIsProcessing(true);
     setTimeout(() => {
@@ -93,7 +93,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
     });
   };
 
-  // Upload Screenshot (with redirect after success)
+  // Upload screenshot
   const handleUpload = async () => {
     if (!screenshot) {
       toast({
@@ -129,7 +129,6 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
         description: "Thank you for supporting the Bag Challenge! Redirecting...",
       });
 
-      // Wait 3 seconds before redirect
       setTimeout(() => {
         window.location.href = "/thank-you";
       }, 3000);
@@ -306,23 +305,23 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
                   </div>
 
                   {isMobile && (
-  <div className="mt-4">
-    <Button
-      type="button"
-      onClick={() => {
-        const upiLink = `upi://pay?pa=${UPI_ID}&pn=Qismat%20Foundation&cu=INR`;
-        window.location.href = upiLink;
-      }}
-      className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
-    >
-      💰 Open UPI App
-    </Button>
-    <p className="text-xs text-muted-foreground mt-2">
-      Opens your UPI app (enter amount manually).
-    </p>
-  </div>
-)}
-
+                    <div className="mt-4">
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          const upiLink = `upi://pay?pa=${UPI_ID}&pn=Qismat%20Foundation&cu=INR`;
+                          window.location.href = upiLink;
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
+                      >
+                        💰 Open UPI App
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Opens your UPI app — enter ₹{totalAmount} manually.
+                      </p>
+                    </div>
+                  )}
+                </div>
 
                 {/* Screenshot Upload */}
                 <div className="mt-6">
