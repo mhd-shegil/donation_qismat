@@ -20,7 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingBag, Loader2, Upload, Copy } from "lucide-react";
+import { ShoppingBag, Loader2, Upload, Copy, ExternalLink } from "lucide-react";
 import axios from "axios";
 
 const BAG_PRICE = 199;
@@ -71,7 +71,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
   const quantity = watch("quantity");
   const totalAmount = quantity ? (parseInt(quantity) * BAG_PRICE).toString() : "0";
 
-  // Step 1 — proceed to payment
+  // Step 1 — Proceed to Payment
   const onSubmit = async () => {
     setIsProcessing(true);
     setTimeout(() => {
@@ -79,9 +79,9 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
       setIsDonationStep(true);
       toast({
         title: "Proceed to Pay",
-        description: "Scan the QR or copy UPI ID below to donate.",
+        description: "Copy the UPI ID below and paste it in your UPI app.",
       });
-    }, 1000);
+    }, 800);
   };
 
   // Copy UPI ID
@@ -93,7 +93,27 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
     });
   };
 
-  // Upload screenshot
+  // Just open the UPI app (no redirect link)
+  const openUPIApp = () => {
+    if (!isMobile) {
+      toast({
+        title: "Please use your phone",
+        description: "UPI apps can only be opened from mobile devices.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Opening UPI App...",
+      description: "Now paste the copied UPI ID in your payment app.",
+    });
+
+    // ⚡ Try to trigger any installed UPI app — blank intent
+    window.location.href = "upi://";
+  };
+
+  // Upload screenshot (fast redirect)
   const handleUpload = async () => {
     if (!screenshot) {
       toast({
@@ -126,17 +146,16 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
 
       toast({
         title: "Upload Successful 🎉",
-        description: "Thank you for supporting the Bag Challenge! Redirecting...",
+        description: "Redirecting to Thank You page...",
       });
 
-      setTimeout(() => {
-        window.location.href = "/thank-you";
-      }, 3000);
+      // 🚀 Redirect instantly after successful upload
+      window.location.href = "/thank-you";
     } catch (error) {
       console.error("❌ Upload failed:", error);
       toast({
         title: "Upload Failed",
-        description: "There was an issue uploading your screenshot. Please try again.",
+        description: "Please try again after a few seconds.",
         variant: "destructive",
       });
     } finally {
@@ -243,9 +262,6 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
               <div className="mt-3 p-3 bg-primary/10 rounded-lg border border-primary/20">
                 <p className="text-sm text-muted-foreground">Total Amount</p>
                 <p className="text-2xl font-bold text-primary">₹{totalAmount}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {quantity} bag{parseInt(quantity) !== 1 ? "s" : ""} × ₹{BAG_PRICE}
-                </p>
               </div>
             )}
           </div>
@@ -260,7 +276,7 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
               {isProcessing ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Preparing Payment...
+                  Preparing...
                 </>
               ) : (
                 <>
@@ -271,14 +287,13 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
             </Button>
           )}
 
-          {/* Payment & Upload Section */}
+          {/* Payment Section */}
           {isDonationStep && (
             <div
               className="mt-8 p-6 rounded-xl border bg-cover bg-center relative"
               style={{ backgroundImage: "url('/src/assets/Artboard 1.jpg')" }}
             >
               <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] rounded-xl"></div>
-
               <div className="relative z-10">
                 <h3 className="text-xl font-semibold text-center mb-3 text-foreground">
                   Complete Your Donation
@@ -290,7 +305,9 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
                     alt="Scan to pay via UPI"
                     className="mx-auto w-40 border rounded-lg shadow-sm"
                   />
-                  <p className="text-sm text-muted-foreground mt-2">Scan using any UPI app</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Copy the UPI ID and paste it in your UPI app to donate.
+                  </p>
 
                   <div className="flex justify-center items-center gap-2 mt-3">
                     <code className="bg-white px-3 py-1 rounded text-sm border">{UPI_ID}</code>
@@ -308,17 +325,11 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
                     <div className="mt-4">
                       <Button
                         type="button"
-                        onClick={() => {
-                          const upiLink = `upi://pay?pa=${UPI_ID}&pn=Qismat%20Foundation&cu=INR`;
-                          window.location.href = upiLink;
-                        }}
+                        onClick={openUPIApp}
                         className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
                       >
-                        💰 Open UPI App
+                        <ExternalLink className="mr-2 h-4 w-4" /> Open UPI App
                       </Button>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Opens your UPI app — enter ₹{totalAmount} manually.
-                      </p>
                     </div>
                   )}
                 </div>
