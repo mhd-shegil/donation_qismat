@@ -306,23 +306,23 @@ const DonationForm = ({ onSuccess }: DonationFormProps) => {
                   </div>
 
                   {isMobile && (
-                    <div className="mt-4">
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          const upiLink = `upi://pay?pa=${UPI_ID}&pn=Qismat%20Foundation&am=${totalAmount}&cu=INR&tn=Donation%20for%20Bag%20Challenge`;
-                          window.location.href = upiLink;
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
-                      >
-                        💰 Open UPI App to Pay ₹{totalAmount}
-                      </Button>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Works best on Google Pay, PhonePe, or Paytm mobile apps.
-                      </p>
-                    </div>
-                  )}
-                </div>
+  <div className="mt-4">
+    <Button
+      type="button"
+      onClick={() => {
+        const upiLink = `upi://pay?pa=${UPI_ID}&pn=Qismat%20Foundation&cu=INR`;
+        window.location.href = upiLink;
+      }}
+      className="bg-blue-600 hover:bg-blue-700 text-white mt-2"
+    >
+      💰 Open UPI App
+    </Button>
+    <p className="text-xs text-muted-foreground mt-2">
+      Opens your UPI app (enter amount manually).
+    </p>
+  </div>
+)}
+
 
                 {/* Screenshot Upload */}
                 <div className="mt-6">
